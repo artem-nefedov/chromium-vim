@@ -6,9 +6,7 @@ Updated to use Manifest V3 with AI (Claude).
 
 # Where can I get cVim?
 
- * There are two ways:
-  * You can install it through the [Chrome web store](https://chrome.google.com/webstore/detail/cvim/ihlenndgcmojhcghmfjfneahoeklbjjh)
-  * You can download the `.zip` file [here](https://github.com/artem-nefedov/chromium-vim/archive/master.zip) and enable cVim by going to the `chrome://extensions` URL and checking developer mode, then pointing Chrome to the unzipped folder via the `Load unpacked extensions...` button.
+You can download the `.zip` file [here](https://github.com/artem-nefedov/chromium-vim/archive/master.zip) and enable cVim by going to the `chrome://extensions` URL and checking developer mode, then pointing Chrome to the unzipped folder via the `Load unpacked extensions...` button.
 
 # Why is this different than Vimium, ViChrome, or Vrome?
 
