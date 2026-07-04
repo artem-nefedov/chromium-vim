@@ -1,0 +1,193 @@
+# cVim → Manifest V3 Migration Plan
+
+## Background
+
+cVim is a **Manifest V2** extension (`manifest.json`: `"manifest_version": 2`).
+Chromium has fully removed the ability to run MV2 extensions:
+
+- **Chromium 138 (2025-07-24):** MV2 extensions disabled for all users on all
+  channels, with no way to re-enable them.
+- **Chromium 139+:** the enterprise `ExtensionManifestV2Availability` policy is
+  removed — MV2 extensions cease to function entirely.
+
+Brave tracks Chromium closely, so once Brave updated into that range the browser
+began refusing to load cVim's background page and content scripts. Nothing in the
+extension changed; the platform removed the runtime MV2 depends on. This document
+is the plan to port cVim to Manifest V3.
+
+## Guiding principles
+
+- **Keep `.cvimrc` fully working** — settings, `map`/`imap`/`unmap`, blacklists,
+  site-specific `site{...}` scopes, `:source`, gist sync.
+- **Remove only what requires `eval` / arbitrary code injection.** MV3 bans
+  `unsafe-eval` in content scripts with no escape hatch (a sandboxed iframe — the
+  one place MV3 permits eval — cannot reach the page DOM, which is the whole point
+  of these features).
+- Everything else is mechanical API modernization plus one real architectural
+  change: persistent background page → service worker.
+
+No `chrome.webRequest` blocking and no remotely-hosted code (besides the eval we
+are removing) are used — the two worst MV3 blockers are absent, which is why this
+migration is feasible.
+
+---
+
+## Phase 0 — Remove un-portable features
+
+These four features all execute user-authored JS strings and cannot survive MV3.
+Remove the feature, its parser support, its execution site, and its docs.
+
+| Feature | Config syntax | Execution site to delete | Parser site |
+|---|---|---|---|
+| Named JS functions / code blocks | `name() -> {{ ... }}`, `:call fn` | `content_scripts/messenger.js:295` (`eval(FUNCTIONS...)`), `content_scripts/mappings.js:935` (`ECHO('eval')`) | `cvimrc_parser/parser.js:293` (`FUNCTIONS`) |
+| Script hints | `createScriptHint(fn)` | `content_scripts/hints.js:179` (`eval(FUNCTIONS...)(link)`), `content_scripts/mappings.js:432` | `FUNCTIONS` (shared) |
+| Auto-functions | bare `{{ ... }}` block | `content_scripts/command.js:1198-1202` (`eval(AUTOFUNCTIONS...)`) | `cvimrc_parser/parser.js:285` (`AUTOFUNCTIONS`) |
+| `:script` command | `:script <js>` | `content_scripts/command.js:897-899` → `background_scripts/actions.js:581` (`runScript`/`executeScript({code})`) | n/a |
+
+Steps:
+
+1. Delete the `FUNCTIONS` (`parser.js:293-301`) and `AUTOFUNCTIONS`
+   (`parser.js:285-292`) grammar rules from `cvimrc_parser/parser.js`, then
+   **regenerate** `content_scripts/cvimrc_parser.js` from the PEG grammar (see the
+   `cvimrc_parser/` build), or hand-mirror the edit into both copies.
+2. Delete `_.runScript` (`actions.js:581-590`) and the `:script` branch
+   (`command.js:897-899`).
+3. Delete the `AUTOFUNCTIONS` loop (`command.js:1198-1202`), the `eval` cases in
+   `messenger.js:294-296` and `mappings.js:934-939`, `createScriptHint`
+   (`mappings.js:432`), and the `case 'script':` hint handler (`hints.js:178-180`).
+4. **Make removed config a soft no-op, not a parse error:** when the parser hits
+   `{{`, `->`, or `createScriptHint`, skip it and surface a warning ("JS functions
+   are unsupported in cVim MV3") rather than failing the whole `.cvimrc`. This
+   protects existing users' configs.
+5. Update `README.md` (remove the "Code blocks" section ~L170-183, the
+   `createScriptHint` row ~L346, and the `:script` row ~L491) and `CHANGELOG.md`.
+
+> Note: `editWithVim` / `set vimport` (`actions.js:730`) is **kept** — it POSTs to
+> a localhost helper, which is portable to `fetch`, not an eval feature.
+
+---
+
+## Phase 1 — Mechanical API swaps (low risk, do first)
+
+Independent and testable in isolation:
+
+1. **`browserAction` → `action`** — manifest key `browser_action` → `action`;
+   6 calls in `background_scripts/popup.js` (`:27,38,46,76,78`) and
+   `background_scripts/actions.js:708` (`chrome.browserAction.setIcon` →
+   `chrome.action.setIcon`).
+2. **`chrome.extension.*` → `chrome.runtime.*`** — `pages/popup.js:7,29`,
+   `content_scripts/command.js:573,581,589`, `content_scripts/messenger.js:1,167`
+   (`connect`, `getURL`, `onMessage`).
+3. **`chrome.tabs.executeScript`/`insertCSS` → `chrome.scripting.*`** —
+   `actions.js:612` (`injectCSS`) → `chrome.scripting.insertCSS`;
+   `update.js:32-46` re-injection loop → `chrome.scripting.executeScript({files})`.
+   (`runScript` already deleted in Phase 0.) Add the `"scripting"` permission.
+4. **`web_accessible_resources`** — array → object form:
+   ```json
+   "web_accessible_resources": [
+     { "resources": ["cmdline_frame.html"], "matches": ["<all_urls>"] }
+   ]
+   ```
+5. **CSP** — drop `unsafe-eval`. MV3 form:
+   ```json
+   "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'self'" }
+   ```
+6. **Manifest scaffolding** — `manifest_version: 3`; split `permissions` vs
+   `host_permissions` (`<all_urls>` moves to `host_permissions`);
+   `clipboardRead`/`clipboardWrite`/`downloads.shelf` remain permissions.
+
+---
+
+## Phase 2 — Background page → service worker (the hard part)
+
+### 2a. Entry point
+
+Replace `"background": { "scripts": [...15 files...] }` with
+`"background": { "service_worker": "background.js", "type": "module" }`. Either
+bundle the 15 files or `importScripts()` them. Keep load order
+(`utils` → `cvimrc_parser` → ... → `main` → `frames`).
+
+### 2b. No-DOM fixes
+
+- **`background_scripts/clipboard.js` (`:4-25`)** — `document.createElement('textarea')`
+  + `execCommand` is dead in a worker. Add an **offscreen document**
+  (`chrome.offscreen`, `"offscreen"` permission) hosting a tiny page that does
+  clipboard read/write, driven by messages. This preserves copy/paste exactly.
+- **`content_scripts/utils.js`** (loaded in the background context) — guard/branch
+  the `document.body` / `traverseDOM` paths (`:167,169,349`) so the worker never
+  touches the DOM; those helpers are only needed content-side.
+
+### 2c. `XMLHttpRequest` → `fetch`
+
+- `main.js:9` `httpRequest` — rewrite with `fetch`, keep the same Promise
+  signature so callers (`options.js:153`, `actions.js:839`, `files.js:10`) are
+  untouched.
+- `actions.js:731` `editWithVim` — `fetch('http://127.0.0.1:'+vimport, {method:'POST', ...})`.
+  Add `http://127.0.0.1/*` / `http://localhost/*` to `host_permissions`.
+
+### 2d. `localStorage` → `chrome.storage`
+
+- `history.js:11,100` command history → `chrome.storage.local` (async; adjust the
+  read/write to Promises).
+
+### 2e. Timers → `chrome.alarms`
+
+- `options.js:170` hourly `fetchGist` `setTimeout` →
+  `chrome.alarms.create('fetchGist', {periodInMinutes: 60})` + `onAlarm`. Add the
+  `"alarms"` permission.
+- `actions.js:14` `setTimeout(doOpen, 80)` is short-lived — leave as-is.
+
+### 2f. Ephemeral state — the core rework
+
+The worker is killed after ~30s idle, wiping the shared globals: `sessions`,
+`ActiveTabs`, `TabHistory`, `activePorts`, `LastUsedTabs` (`main.js:1-5`),
+`Quickmarks`/`lastCommand` (`actions.js`), `settings`/`Options` (`options.js`),
+`Popup.active` (`popup.js`), `Sessions`/`tabHistory` (`sessions.js`),
+`Frames.tabFrames` (`frames.js`), `History.*` (`history.js`), `tabCreationOrder`
+(`tab_creation_order.js`).
+
+Strategy, tiered by data type:
+
+- **Durable state** (settings, Quickmarks, command history, sessions,
+  `Popup.active`) → `chrome.storage` as source of truth; load-or-rehydrate at the
+  top of every event handler instead of assuming a one-time init ran.
+- **Rebuildable tab/window state** (`ActiveTabs`, `LastUsedTabs`,
+  `tabCreationOrder`, `TabHistory`) → persist to `chrome.storage.session`
+  (in-memory, MV3-native, survives worker restarts within a browser session).
+  Rebuild from `chrome.tabs.query` on cold start.
+- **Ports** (`activePorts`, `Frames.tabFrames`) → **do not persist.** Ports break
+  when the worker sleeps. Content scripts must **reconnect on demand** and the
+  worker must lazily re-register frames on the next message. Convert broadcast
+  patterns (`sendLastSearch` `actions.js:594`, settings sync) from "iterate held
+  ports" to `chrome.tabs.query` + `chrome.tabs.sendMessage`.
+
+This is the phase that carries real regression risk (frame tracking, session /
+back-forward history). Budget most testing here.
+
+---
+
+## Phase 3 — Verification
+
+Manual smoke test on current Brave / Chromium 138+ (load unpacked):
+
+- **Core:** `map`/`imap`, scrolling, link hints (`f`/`F`), find, visual mode, tab
+  commands, `:tabopen` / history / bookmark completion.
+- **`.cvimrc`:** load a config with settings + mappings + blacklist + `site{}`
+  scope + `:source` + gist sync → all apply.
+- **Removed features:** a `.cvimrc` containing `{{ }}` blocks / `createScriptHint`
+  / `:script` loads with a **warning**, and the rest of the config still applies.
+- **Worker lifecycle:** let the SW sleep (30s+), then exercise clipboard
+  (`yy`/`p`), search broadcast, session restore, quickmarks — confirm they
+  rehydrate.
+- **Reload extension** → verify no re-injection breakage (`update.js`).
+
+---
+
+## Effort & risk summary
+
+| Phase | Risk | Rough effort |
+|---|---|---|
+| 0 — Remove eval features | Low | ~0.5 day |
+| 1 — API swaps | Low | ~1 day |
+| 2 — Service worker | **High** | ~1.5–2 weeks (2f dominates) |
+| 3 — Verification | Medium | ~2–3 days |
