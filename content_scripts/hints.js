@@ -175,9 +175,6 @@ Hints.dispatchAction = function(link, shift) {
       noconvert: true
     });
     break;
-  case 'script':
-    eval(settings.FUNCTIONS[this.scriptFunction])(link);
-    break;
   default:
     if (node === 'textarea' || (node === 'input' &&
           /^(text|password|email|search)$/i.test(link.type)) ||
@@ -745,8 +742,7 @@ Hints.create = function(type, multi) {
           edit:          '(edit)',
           hover:         '(hover)',
           unhover:       '(unhover)',
-          multi:         '(multi)',
-          script:        '(script: "' + self.scriptFunction + '")'
+          multi:         '(multi)'
         })[type] || '';
       })());
     }

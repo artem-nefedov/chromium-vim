@@ -894,10 +894,6 @@ Command.execute = function(value, repeats) {
     return;
   }
 
-  if (/^script +/.test(value)) {
-    RUNTIME('runScript', {code: value.slice(7)});
-  }
-
 };
 
 Command.show = function(search, value, complete) {
@@ -1195,11 +1191,6 @@ Command.init = function(enabled) {
       waitForLoad(Cursor.init, Cursor);
     }
     addListeners();
-    if (typeof settings.AUTOFUNCTIONS === 'object') {
-      Object.getOwnPropertyNames(settings.AUTOFUNCTIONS).forEach(function(name) {
-        eval('(function(){' + settings.AUTOFUNCTIONS[name] + '})()');
-      });
-    }
   } else {
     RUNTIME('setIconDisabled');
     this.loaded = false;

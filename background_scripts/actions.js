@@ -578,17 +578,6 @@ Actions = (function() {
     }
   };
 
-  _.runScript = function(o) {
-    chrome.tabs.executeScript(o.sender.tab.id, {
-      code: o.request.code,
-      runAt: 'document_start',
-    }, function() {
-      if (!chrome.runtime.lastError) {
-        return true;
-      }
-    });
-  };
-
   // Port actions
 
   _.sendLastSearch = function() {

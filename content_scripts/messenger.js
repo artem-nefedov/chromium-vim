@@ -291,9 +291,6 @@ chrome.extension.onMessage.addListener(function(request, sender, callback) {
       case 'callMapFunction':
         Mappings.actions[request.name](1);
         break;
-      case 'eval':
-        eval(settings.FUNCTIONS[request.name] + request.args);
-        break;
       }
     }
     break;
