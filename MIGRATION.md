@@ -93,7 +93,7 @@ Steps:
 
 ## Phase 1 — Mechanical API swaps ✅ DONE
 
-_Completed in commit `cc77f0f`._
+_Completed in commit `dadad5f`._
 
 **Implementation notes (as built):**
 
