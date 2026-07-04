@@ -32,10 +32,34 @@ migration is feasible.
 
 ---
 
-## Phase 0 — Remove un-portable features
+## Phase 0 — Remove un-portable features ✅ DONE
+
+_Completed in commit `7f24545`._
 
 These four features all execute user-authored JS strings and cannot survive MV3.
 Remove the feature, its parser support, its execution site, and its docs.
+
+**Implementation notes (as built):**
+
+- The PEG grammar (`cvimrc_parser/parser.peg`) still *recognizes* the
+  `{{ ... }}` / `->` syntax but its actions now `return null`, so older
+  `.cvimrc` files keep parsing and the code is silently discarded. The parser
+  was regenerated via `make` (which also copies to
+  `content_scripts/cvimrc_parser.js`); this required `npm install` (adds
+  `package-lock.json`).
+- `:call <jsFunction>` (`mappings.js`) and `createScriptHint` now show an
+  `"...not supported"` error via `Status.setMessage(..., 2, 'error')` instead
+  of eval'ing. Built-in `:call <action>` still works.
+- Removed: `_.runScript` (`actions.js`), the `:script` branch (`command.js`),
+  the `AUTOFUNCTIONS` loop (`command.js`), the `eval` case in `messenger.js`,
+  the `case 'script'` hint executor + its HUD label (`hints.js`), and the now
+  unused `FUNCTIONS: {}` default (`options.js`).
+- Docs: `pages/mappings.html` / `pages/changelog.html` are generated from
+  `README.md` / `CHANGELOG.md` via `scripts/create_pages.js`, so they were
+  regenerated rather than hand-edited.
+- Verified: parser test suite passes, all edited JS passes `node --check`, and
+  no live `eval`/`FUNCTIONS`/`AUTOFUNCTIONS`/`runScript`/`scriptFunction`
+  references remain.
 
 | Feature | Config syntax | Execution site to delete | Parser site |
 |---|---|---|---|
@@ -187,7 +211,7 @@ Manual smoke test on current Brave / Chromium 138+ (load unpacked):
 
 | Phase | Risk | Rough effort |
 |---|---|---|
-| 0 — Remove eval features | Low | ~0.5 day |
+| 0 — Remove eval features ✅ | Low | ~0.5 day (done) |
 | 1 — API swaps | Low | ~1 day |
 | 2 — Service worker | **High** | ~1.5–2 weeks (2f dominates) |
 | 3 — Verification | Medium | ~2–3 days |
