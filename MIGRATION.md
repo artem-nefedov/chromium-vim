@@ -149,7 +149,7 @@ Original checklist (all applied):
 
 ## Phase 2 — Background page → service worker ✅ DONE
 
-_Completed in commit `PHASE2`._
+_Completed in commit `7b86a0e`._
 
 **Implementation notes (as built):**
 
