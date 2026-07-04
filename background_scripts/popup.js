@@ -2,6 +2,19 @@ var Popup = {
   active: true
 };
 
+// The service worker loses in-memory state when it idles out, so persist the
+// enabled/disabled flag to session storage and rehydrate it on every worker
+// start. (Session storage resets on browser restart, where re-enabling cVim is
+// the desired default anyway.)
+chrome.storage.session.get('popupActive', function(data) {
+  if (typeof data.popupActive === 'boolean')
+    Popup.active = data.popupActive;
+});
+
+Popup.persistActive = function() {
+  chrome.storage.session.set({popupActive: this.active});
+};
+
 Popup.getBlacklisted = function(callback) {
   if (typeof callback === 'object')
     callback = callback.callback;
@@ -69,6 +82,7 @@ Popup.toggleEnabled = function(obj) {
   }
   chrome.tabs.query({}, function(tabs) {
     this.active = !this.active;
+    this.persistActive();
     if (!request || (request && !request.blacklisted)) {
       tabs.map(function(tab) { return tab.id; }).forEach(function(id) {
         chrome.tabs.sendMessage(id, {action: 'toggleEnabled'});

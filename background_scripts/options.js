@@ -166,10 +166,18 @@ Options.fetchGist = function() {
       sendSettings: true
     });
     if (updated.autoupdategist) {
-      window.setTimeout(Options.fetchGist, 1000 * 60 * 60);
+      chrome.alarms.create('fetchGist', {periodInMinutes: 60});
+    } else {
+      chrome.alarms.clear('fetchGist');
     }
   });
 };
+
+chrome.alarms.onAlarm.addListener(function(alarm) {
+  if (alarm.name === 'fetchGist' && settings.autoupdategist && settings.GISTURL) {
+    Options.fetchGist();
+  }
+});
 
 chrome.storage[storageMethod].get('settings', function(data) {
   if (data.settings) {

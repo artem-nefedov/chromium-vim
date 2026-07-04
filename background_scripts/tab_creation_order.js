@@ -3,6 +3,16 @@ var getTabOrderIndex = (function() {
   var tabCreationOrder = {},
       lastActiveTabId = null;
 
+  // Persisted to chrome.storage.session so the tab-open ordering survives the
+  // MV3 service worker idling out (see main.js persistTabState for the pattern).
+  var persist = function() {
+    chrome.storage.session.set({tabCreationOrder: tabCreationOrder});
+  };
+  chrome.storage.session.get('tabCreationOrder', function(data) {
+    if (data.tabCreationOrder)
+      tabCreationOrder = data.tabCreationOrder;
+  });
+
   chrome.tabs.onActivated.addListener(function(activeInfo) {
     lastActiveTabId = activeInfo.tabId;
   });
@@ -14,6 +24,7 @@ var getTabOrderIndex = (function() {
         tabCreationOrder[lastActiveTabId] = [];
       tabCreationOrder[lastActiveTabId].push(tab.id);
     }
+    persist();
   });
 
   chrome.tabs.onRemoved.addListener(function(tabId) {
@@ -24,6 +35,7 @@ var getTabOrderIndex = (function() {
           tabCreationOrder[tab].splice(index, 1);
       });
       delete tabCreationOrder[tabId];
+      persist();
     }
   });
 

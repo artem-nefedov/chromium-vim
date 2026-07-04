@@ -147,16 +147,76 @@ Original checklist (all applied):
 
 ---
 
-## Phase 2 — Background page → service worker (the hard part)
+## Phase 2 — Background page → service worker ✅ DONE
 
-### 2a. Entry point
+_Completed in commit `PHASE2`._
+
+**Implementation notes (as built):**
+
+- **2a — entry point.** Added `background.js`, a classic (`importScripts`)
+  service worker that loads the same 15 files in the same order, preserving the
+  cross-file globals model without a bundler. `manifest.json` `"background"` →
+  `{ "service_worker": "background.js" }` (no `"type": "module"` — kept classic
+  so `importScripts` + shared globals work). The worker sets `self.window = self`
+  before importing, because three shared files assign to `window.*`
+  (`utils.js` `parseConfig`, `main.js` `httpRequest`, `options.js` timer). Also
+  moved `main.js`'s hidden `chrome.extension.onConnect` listener group into
+  `chrome.runtime` (Phase 1's grep couldn't see it — it was keyed by the
+  `Listeners.extension` object, invoked as `chrome[api][method]`).
+- **2b — no DOM.** `background_scripts/clipboard.js` rewritten to drive an
+  **offscreen document** (`pages/offscreen.{html,js}`, `"offscreen"` permission)
+  for copy/paste. `paste` became async (callback); its three synchronous callers
+  in `actions.js` (`openPaste`, `openPasteTab`, `getPaste`) were updated. The
+  DOM-only helpers in `utils.js` (`document.body`, `traverseDOM`,
+  `getComputedStyle`) are never *called* in the worker, so no guards were needed
+  beyond the `self.window` alias.
+- **2c — fetch.** `main.js` `httpRequest` and `actions.js` `editWithVim` now use
+  `fetch` (same Promise signature for `httpRequest`; callers untouched).
+  `127.0.0.1` is already covered by `<all_urls>` in `host_permissions`.
+- **2d — storage.** `history.js` command history moved from `localStorage` to
+  `chrome.storage.local` (`commandHistory` key); load is now async with an
+  empty-array seed via `History.clear()`.
+- **2e — alarms.** `options.js` hourly `fetchGist` `setTimeout` →
+  `chrome.alarms.create('fetchGist', {periodInMinutes: 60})` + `onAlarm`
+  (cleared when `autoupdategist` is off). `"alarms"` permission added.
+  `actions.js:14` `setTimeout(doOpen, 80)` left as-is (fires mid-action).
+- **2f — ephemeral state.**
+  - Ports (`activePorts`, `Frames.tabFrames`) intentionally **not** persisted.
+    The critical fix is content-side: `messenger.js` `onDisconnect` used to
+    *destroy* cVim on the page; it now **reconnects** (`connectPort()`), which
+    re-runs the `hello` handshake and re-registers the frame. It only tears down
+    if `connect()` throws (extension truly reloaded/disabled). `PORT`/`ECHO`
+    resolve the `port` variable at call time so they follow reconnects.
+  - Rebuildable tab/window state (`ActiveTabs`, `TabHistory`, `LastUsedTabs` in
+    `main.js`; `tabCreationOrder`) mirrored to `chrome.storage.session` on every
+    mutation and rehydrated on cold start. Readers stay synchronous
+    (best-effort — worst case is one missed action right after a cold start).
+  - `Popup.active` (enabled/disabled flag) → `chrome.storage.session`.
+  - `sessions.js` needs no change: modern Chromium always has `chrome.sessions`,
+    so `nativeSessions` is true and the in-memory fallback branch never runs;
+    `recentlyClosed` is rebuilt by `onChanged()` at import + on the event.
+- **Known follow-up (out of scope):** `actions.js` `hideDownloadsShelf` calls
+  `chrome.downloads.setShelfEnabled`, removed in Chromium 117+. It will throw
+  when invoked (isolated feature); flagged for a later cleanup.
+- Verified: manifest JSON parses; all edited JS + `background.js` +
+  `offscreen.js` pass `node --check`; no `XMLHttpRequest` / `localStorage` /
+  worker-illegal `document.`/`window.setTimeout` / `chrome.extension` references
+  remain in the background context.
+
+> Runtime behaviour still needs manual testing in-browser (Phase 3) — this is the
+> phase with real regression risk (frame tracking, clipboard round-trip through
+> the offscreen doc, worker-sleep rehydration).
+
+### Original design notes
+
+#### 2a. Entry point
 
 Replace `"background": { "scripts": [...15 files...] }` with
 `"background": { "service_worker": "background.js", "type": "module" }`. Either
 bundle the 15 files or `importScripts()` them. Keep load order
 (`utils` → `cvimrc_parser` → ... → `main` → `frames`).
 
-### 2b. No-DOM fixes
+#### 2b. No-DOM fixes
 
 - **`background_scripts/clipboard.js` (`:4-25`)** — `document.createElement('textarea')`
   + `execCommand` is dead in a worker. Add an **offscreen document**
@@ -166,7 +226,7 @@ bundle the 15 files or `importScripts()` them. Keep load order
   the `document.body` / `traverseDOM` paths (`:167,169,349`) so the worker never
   touches the DOM; those helpers are only needed content-side.
 
-### 2c. `XMLHttpRequest` → `fetch`
+#### 2c. `XMLHttpRequest` → `fetch`
 
 - `main.js:9` `httpRequest` — rewrite with `fetch`, keep the same Promise
   signature so callers (`options.js:153`, `actions.js:839`, `files.js:10`) are
@@ -174,19 +234,19 @@ bundle the 15 files or `importScripts()` them. Keep load order
 - `actions.js:731` `editWithVim` — `fetch('http://127.0.0.1:'+vimport, {method:'POST', ...})`.
   Add `http://127.0.0.1/*` / `http://localhost/*` to `host_permissions`.
 
-### 2d. `localStorage` → `chrome.storage`
+#### 2d. `localStorage` → `chrome.storage`
 
 - `history.js:11,100` command history → `chrome.storage.local` (async; adjust the
   read/write to Promises).
 
-### 2e. Timers → `chrome.alarms`
+#### 2e. Timers → `chrome.alarms`
 
 - `options.js:170` hourly `fetchGist` `setTimeout` →
   `chrome.alarms.create('fetchGist', {periodInMinutes: 60})` + `onAlarm`. Add the
   `"alarms"` permission.
 - `actions.js:14` `setTimeout(doOpen, 80)` is short-lived — leave as-is.
 
-### 2f. Ephemeral state — the core rework
+#### 2f. Ephemeral state — the core rework
 
 The worker is killed after ~30s idle, wiping the shared globals: `sessions`,
 `ActiveTabs`, `TabHistory`, `activePorts`, `LastUsedTabs` (`main.js:1-5`),
@@ -238,5 +298,5 @@ Manual smoke test on current Brave / Chromium 138+ (load unpacked):
 |---|---|---|
 | 0 — Remove eval features ✅ | Low | ~0.5 day (done) |
 | 1 — API swaps ✅ | Low | ~1 day (done) |
-| 2 — Service worker | **High** | ~1.5–2 weeks (2f dominates) |
+| 2 — Service worker ✅ | **High** | code done; needs Phase 3 testing |
 | 3 — Verification | Medium | ~2–3 days |

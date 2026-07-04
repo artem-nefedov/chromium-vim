@@ -372,34 +372,39 @@ Actions = (function() {
   })();
 
   _.openPasteTab = function(o) {
-    var paste = Clipboard.paste();
-    if (!paste) {
-      return;
-    }
-    paste = paste.split('\n').filter(function(e) { return e.trim(); });
-    for (var i = 0; i < o.request.repeats; ++i) {
-      for (var j = 0, l = paste.length; j < l; ++j) {
-        openTab({
-          url: Utils.toSearchURL(paste[j], o.request.engineUrl),
-          index: getTabOrderIndex(o.sender.tab)
-        });
+    Clipboard.paste(function(paste) {
+      if (!paste) {
+        return;
       }
-    }
+      paste = paste.split('\n').filter(function(e) { return e.trim(); });
+      for (var i = 0; i < o.request.repeats; ++i) {
+        for (var j = 0, l = paste.length; j < l; ++j) {
+          openTab({
+            url: Utils.toSearchURL(paste[j], o.request.engineUrl),
+            index: getTabOrderIndex(o.sender.tab)
+          });
+        }
+      }
+    });
   };
 
   _.openPaste = function(o) {
-    var paste = Clipboard.paste();
-    if (!paste) {
-      return;
-    }
-    paste = paste.split('\n')[0];
-    chrome.tabs.update({
-      url: Utils.toSearchURL(paste, o.request.engineUrl)
+    Clipboard.paste(function(paste) {
+      if (!paste) {
+        return;
+      }
+      paste = paste.split('\n')[0];
+      chrome.tabs.update({
+        url: Utils.toSearchURL(paste, o.request.engineUrl)
+      });
     });
   };
 
   _.getPaste = function(o) {
-    o.callback(Clipboard.paste());
+    Clipboard.paste(function(paste) {
+      o.callback(paste);
+    });
+    return true;
   };
 
   _.createSession = function(o) {
@@ -720,16 +725,17 @@ Actions = (function() {
 
 
   _.editWithVim = function(o) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:' + settings.vimport);
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        o.callback({type: 'editWithVim', text: xhr.responseText});
-      }
-    };
-    xhr.send(JSON.stringify({
-      data: '' + (o.request.text || '')
-    }));
+    fetch('http://127.0.0.1:' + settings.vimport, {
+      method: 'POST',
+      body: JSON.stringify({ data: '' + (o.request.text || '') })
+    }).then(function(response) {
+      if (response.ok)
+        return response.text();
+    }).then(function(text) {
+      if (text !== void 0)
+        o.callback({type: 'editWithVim', text: text});
+    });
+    return true;
   };
 
   _.httpRequest = function(o) {
