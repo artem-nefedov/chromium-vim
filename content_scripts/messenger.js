@@ -1,14 +1,32 @@
-var port = chrome.extension.connect({name: 'main'});
-port.onDisconnect.addListener(function() {
-  window.portDestroyed = true;
-  chrome.runtime.sendMessage = function() {};
-  chrome.runtime.connect = function() {};
-  Command.hide();
-  removeListeners();
-  Visual.exit();
-  Find.clear();
-  Command.destroy();
-});
+// `port` is reassigned whenever we reconnect to the background service worker
+// (see connectPort / onPortDisconnect below), so anything that sends over the
+// port resolves `port` at call time rather than capturing it once.
+var port;
+
+var onPortDisconnect = function() {
+  // MV3: the background service worker idles out (~30s) and drops the port.
+  // Reconnect and re-run the 'hello' handshake instead of tearing cVim down.
+  // Only when the extension itself was reloaded/disabled does connect() throw
+  // ("Extension context invalidated") — that is the real teardown case.
+  try {
+    connectPort();
+  } catch (e) {
+    window.portDestroyed = true;
+    chrome.runtime.sendMessage = function() {};
+    chrome.runtime.connect = function() {};
+    Command.hide();
+    removeListeners();
+    Visual.exit();
+    Find.clear();
+    Command.destroy();
+  }
+};
+
+function connectPort() {
+  port = chrome.runtime.connect({name: 'main'});
+  port.onMessage.addListener(onPortMessage);
+  port.onDisconnect.addListener(onPortDisconnect);
+}
 
 (function() {
   var $ = function(FN, caller) {
@@ -23,16 +41,22 @@ port.onDisconnect.addListener(function() {
     };
   };
   RUNTIME = $(chrome.runtime.sendMessage, chrome.runtime);
-  PORT = $(port.postMessage, port);
+  PORT = function(action, args, callback) {
+    if (typeof args === 'function') {
+      callback = args;
+      args = {};
+    }
+    (args = args || {}).action = action;
+    port.postMessage(args);
+  };
   ECHO = function(action, args, callback) {
     args.action = 'echoRequest';
     args.call = action;
-    port.postMessage(args, typeof calback === 'function' ?
-        callback : void 0);
+    port.postMessage(args);
   };
 })();
 
-port.onMessage.addListener(function(response) {
+var onPortMessage = function(response) {
   var key;
   switch (response.type) {
   case 'hello':
@@ -157,14 +181,16 @@ port.onMessage.addListener(function(response) {
     }
     break;
   case 'updateLastCommand':
-    if (request.data) {
-      Mappings.lastCommand = JSON.parse(request.data);
+    if (response.data) {
+      Mappings.lastCommand = JSON.parse(response.data);
     }
     break;
   }
-});
+};
 
-chrome.extension.onMessage.addListener(function(request, sender, callback) {
+connectPort();
+
+chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   switch (request.action) {
   case 'hideHud':
     HUD.hide(true);
@@ -290,9 +316,6 @@ chrome.extension.onMessage.addListener(function(request, sender, callback) {
       switch (request.call) {
       case 'callMapFunction':
         Mappings.actions[request.name](1);
-        break;
-      case 'eval':
-        eval(settings.FUNCTIONS[request.name] + request.args);
         break;
       }
     }

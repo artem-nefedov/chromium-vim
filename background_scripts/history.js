@@ -7,9 +7,7 @@ var History = {
   shouldRefresh: false,
 
   saveCommandHistory: function() {
-    Object.keys(this.commandHistory).forEach(function(e) {
-      localStorage[e] = JSON.stringify(this.commandHistory[e]);
-    }.bind(this));
+    chrome.storage.local.set({ commandHistory: this.commandHistory });
   },
 
   clear: function() {
@@ -95,16 +93,15 @@ var History = {
 
 };
 
-(function() {
-  History.historyTypes.forEach(function(type) {
-    var data = localStorage[type];
-    try {
-      data = JSON.parse(data);
-    } catch (e) {
-      data = typeof data === 'string' ? data.split(',') : [];
-    }
-    History.commandHistory[type] = data;
-  });
-})();
+History.clear(); // seed commandHistory with empty arrays per type
+
+chrome.storage.local.get('commandHistory', function(data) {
+  if (data.commandHistory) {
+    History.historyTypes.forEach(function(type) {
+      if (Array.isArray(data.commandHistory[type]))
+        History.commandHistory[type] = data.commandHistory[type];
+    });
+  }
+});
 
 History.refreshStore();

@@ -2,6 +2,19 @@ var Popup = {
   active: true
 };
 
+// The service worker loses in-memory state when it idles out, so persist the
+// enabled/disabled flag to session storage and rehydrate it on every worker
+// start. (Session storage resets on browser restart, where re-enabling cVim is
+// the desired default anyway.)
+chrome.storage.session.get('popupActive', function(data) {
+  if (typeof data.popupActive === 'boolean')
+    Popup.active = data.popupActive;
+});
+
+Popup.persistActive = function() {
+  chrome.storage.session.set({popupActive: this.active});
+};
+
 Popup.getBlacklisted = function(callback) {
   if (typeof callback === 'object')
     callback = callback.callback;
@@ -24,7 +37,7 @@ Popup.getActiveTab = function(callback) {
 
 Popup.setIconDisabled = function() {
   this.getActiveTab(function(tab) {
-    chrome.browserAction.setIcon({
+    chrome.action.setIcon({
       path: 'icons/disabled.png',
       tabId: tab.id
     }, function() {
@@ -35,7 +48,7 @@ Popup.setIconDisabled = function() {
 
 Popup.setIconEnabled = function(obj) {
   if (obj.sender) {
-    return chrome.browserAction.setIcon({
+    return chrome.action.setIcon({
       path: 'icons/38.png',
       tabId: obj.sender.tab.id
     }, function() {
@@ -43,7 +56,7 @@ Popup.setIconEnabled = function(obj) {
     });
   }
   this.getActiveTab(function(tab) {
-    chrome.browserAction.setIcon({
+    chrome.action.setIcon({
       path: 'icons/38.png',
       tabId: tab.id
     }, function() {
@@ -69,13 +82,14 @@ Popup.toggleEnabled = function(obj) {
   }
   chrome.tabs.query({}, function(tabs) {
     this.active = !this.active;
+    this.persistActive();
     if (!request || (request && !request.blacklisted)) {
       tabs.map(function(tab) { return tab.id; }).forEach(function(id) {
         chrome.tabs.sendMessage(id, {action: 'toggleEnabled'});
         if (this.active) {
-          chrome.browserAction.setIcon({path: 'icons/38.png', tabId: id});
+          chrome.action.setIcon({path: 'icons/38.png', tabId: id});
         } else {
-          chrome.browserAction.setIcon({path: 'icons/disabled.png', tabId: id});
+          chrome.action.setIcon({path: 'icons/disabled.png', tabId: id});
         }
       }.bind(this));
     }

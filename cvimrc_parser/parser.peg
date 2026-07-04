@@ -198,25 +198,19 @@ JavaScriptBlock
     return a.join('');
   }
 
+// Manifest V3 forbids eval() in content scripts, so user-defined JavaScript
+// functions and auto-run code blocks are no longer supported. The grammar still
+// consumes the '{{ ... }}' / '->' syntax so that older .cvimrc files keep
+// parsing, but the code is discarded (returns null) instead of being stored in
+// FUNCTIONS/AUTOFUNCTIONS.
 AutoRunJavaScriptBlock
-  = '->' __ a:JavaScriptBlock {
-    var result = {
-      AUTOFUNCTIONS: {}
-    };
-    result.AUTOFUNCTIONS[autoJsLength] = a;
-    autoJsLength++;
-    return result;
+  = '->' __ JavaScriptBlock {
+    return null;
   }
 
 JavaScriptBlockDefinition
-  = a:Identifier __ b:ParameterList? __ '->' __ c:JavaScriptBlock {
-    var result = {
-      FUNCTIONS: {
-      }
-    };
-    result.FUNCTIONS[a] = '(function(' + (b || []).join(',') + ')' +
-                          '{' + c + '})';
-    return result;
+  = Identifier __ ParameterList? __ '->' __ JavaScriptBlock {
+    return null;
   }
 
 StatementValue

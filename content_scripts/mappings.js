@@ -429,11 +429,12 @@ Mappings.actions = {
   createEditHint: function() { Hints.create('edit'); },
   createHoverHint: function() { Hints.create('hover'); },
   createUnhoverHint: function() { Hints.create('unhover'); },
-  createScriptHint: function(repeats, scriptName) {
-    Hints.scriptFunction = scriptName;
-    if (settings.FUNCTIONS.hasOwnProperty(scriptName)) {
-      Hints.create('script');
-    }
+  createScriptHint: function() {
+    // Script hints executed user-defined JavaScript via eval(), which is
+    // forbidden under Manifest V3, so this action is no longer supported.
+    Status.setMessage(
+      'createScriptHint: user-defined JavaScript functions are not supported',
+      2, 'error');
   },
   yankUrl: function() { Hints.create('yank'); },
   multiYankUrl: function() { Hints.create('multiyank'); },
@@ -932,10 +933,11 @@ Mappings.parseLine = function(line) {
             name: map
           });
         } else {
-          ECHO('eval', {
-            name: map.replace(/\(.*/, ''),
-            args: map.replace(/[^(]+/, '') || '()'
-          });
+          // User-defined JavaScript functions relied on eval(), which is
+          // forbidden under Manifest V3, so `call <jsFunction>` is no longer
+          // supported.
+          Status.setMessage(
+            'call: user-defined JavaScript functions are not supported', 2, 'error');
         }
       });
       break;

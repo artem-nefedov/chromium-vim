@@ -4,15 +4,34 @@ var sessions = {},
     activePorts = [],
     LastUsedTabs = [];
 
+// The service worker loses these in-memory globals when it idles out. Mirror the
+// rebuildable tab/window state to chrome.storage.session (which survives worker
+// restarts within a browser session) and rehydrate on cold start. Readers stay
+// synchronous against the in-memory copy; rehydration is best-effort, so the
+// worst case right after a cold start is a single missed "last used tab"-style
+// action, not broken state. `activePorts` is intentionally NOT persisted — ports
+// cannot survive the worker sleeping and are re-established by reconnecting
+// content scripts.
+function persistTabState() {
+  chrome.storage.session.set({
+    ActiveTabs: ActiveTabs,
+    TabHistory: TabHistory,
+    LastUsedTabs: LastUsedTabs
+  });
+}
+
+chrome.storage.session.get(['ActiveTabs', 'TabHistory', 'LastUsedTabs'],
+  function(data) {
+    if (data.ActiveTabs) ActiveTabs = data.ActiveTabs;
+    if (data.TabHistory) TabHistory = data.TabHistory;
+    if (data.LastUsedTabs) LastUsedTabs = data.LastUsedTabs;
+  });
+
 window.httpRequest = function(request) {
-  return new Promise(function(acc, rej) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', request.url);
-    xhr.onload = function() {
-      acc(request.json ? JSON.parse(xhr.responseText) : xhr.responseText);
-    };
-    xhr.onerror = rej.bind(null, xhr);
-    xhr.send();
+  return fetch(request.url).then(function(response) {
+    if (!response.ok)
+      throw new Error('cVim httpRequest failed: ' + response.status);
+    return request.json ? response.json() : response.text();
   });
 };
 
@@ -77,6 +96,7 @@ var Listeners = {
           TabHistory[id].links = [changeInfo.url];
           TabHistory[id].state = 0;
         }
+        persistTabState();
       }
     },
     onActivated: function(tab) {
@@ -91,6 +111,7 @@ var Listeners = {
       if (ActiveTabs[tab.windowId].length > 2) {
         ActiveTabs[tab.windowId].shift();
       }
+      persistTabState();
     },
     onRemoved: function(id, removeInfo) {
       updateTabIndices();
@@ -103,6 +124,7 @@ var Listeners = {
       if (TabHistory[id] !== void 0) {
         delete TabHistory[id];
       }
+      persistTabState();
       Frames.remove(id);
     },
     onCreated: updateTabIndices,
@@ -110,10 +132,14 @@ var Listeners = {
   },
 
   windows: {
-    onRemoved: function(windowId) { delete ActiveTabs[windowId]; }
+    onRemoved: function(windowId) {
+      delete ActiveTabs[windowId];
+      persistTabState();
+    }
   },
 
-  extension: {
+  runtime: {
+    onMessage: Actions,
     onConnect: function(port) {
       if (activePorts.indexOf(port) !== -1)
         return;
@@ -136,8 +162,6 @@ var Listeners = {
       });
     }
   },
-
-  runtime: { onMessage: Actions },
 
   commands: {
     onCommand: function(command) {

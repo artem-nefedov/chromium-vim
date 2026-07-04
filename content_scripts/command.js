@@ -570,7 +570,7 @@ Command.execute = function(value, repeats) {
     tab.tabbed = true;
     RUNTIME('openLink', {
       tab: tab,
-      url: chrome.extension.getURL('/pages/options.html'),
+      url: chrome.runtime.getURL('/pages/options.html'),
       repeats: repeats
     });
     return;
@@ -578,7 +578,7 @@ Command.execute = function(value, repeats) {
     tab.tabbed = true;
     RUNTIME('openLink', {
       tab: tab,
-      url: chrome.extension.getURL('/pages/changelog.html'),
+      url: chrome.runtime.getURL('/pages/changelog.html'),
       repeats: repeats
     });
     return;
@@ -586,7 +586,7 @@ Command.execute = function(value, repeats) {
     tab.tabbed = true;
     RUNTIME('openLink', {
       tab: tab,
-      url: chrome.extension.getURL('/pages/mappings.html')
+      url: chrome.runtime.getURL('/pages/mappings.html')
     });
     return;
   case 'stop':
@@ -894,10 +894,6 @@ Command.execute = function(value, repeats) {
     return;
   }
 
-  if (/^script +/.test(value)) {
-    RUNTIME('runScript', {code: value.slice(7)});
-  }
-
 };
 
 Command.show = function(search, value, complete) {
@@ -1195,11 +1191,6 @@ Command.init = function(enabled) {
       waitForLoad(Cursor.init, Cursor);
     }
     addListeners();
-    if (typeof settings.AUTOFUNCTIONS === 'object') {
-      Object.getOwnPropertyNames(settings.AUTOFUNCTIONS).forEach(function(name) {
-        eval('(function(){' + settings.AUTOFUNCTIONS[name] + '})()');
-      });
-    }
   } else {
     RUNTIME('setIconDisabled');
     this.loaded = false;

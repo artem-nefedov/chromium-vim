@@ -168,19 +168,11 @@ map TD :tabnew @@reddit_prog/@@top_day<CR>
 " Use paste buffer in mappings
 map T :tabnew wikipedia @"<CR>
 
-" Code blocks (see below for more info)
-getIP() -> {{
-httpRequest({url: 'http://api.ipify.org/?format=json', json: true},
-            function(res) { Status.setMessage('IP: ' + res.ip); });
-}}
-" Displays your public IP address in the status bar
-map ci :call getIP<CR>
-
-" Script hints
-echo(link) -> {{
-  alert(link.href);
-}}
-map <C-f> createScriptHint(echo)
+" NOTE: User-defined JavaScript functions ("code blocks"), the `:call` of such
+" functions, `createScriptHint`, auto-run blocks, and the `:script` command are
+" no longer supported. They relied on eval(), which is forbidden in content
+" scripts under Manifest V3. Older .cvimrc files that still contain `{{ ... }}`
+" blocks will continue to load; the blocks are simply ignored.
 
 let configpath = '/path/to/your/.cvimrc'
 set localconfig " Update settings via a local file (and the `:source` command) rather
@@ -267,37 +259,14 @@ site '*://*/*.js' {
 :bookmarks my_bookmark.com   " same tab
 ```
 
-### Code blocks
- * Code blocks allow you to interact with cVim's content scripts via the cVimrc.
- * Since code blocks use `eval(...)`, you should only use them if you know what you're doing.
-
-```JavaScript
-" To be used by the code block
-set hintset_a
-
-" Create a code block named switchHintCharacters
-switchHintCharacters -> {{
-  // We are now in JavaScript mode
-
-  // Settings are contained in an object named settings
-  settings.hintset_a = !settings.hintset_a;
-  if (settings.hintset_a) {
-    settings.hintcharacters = 'abc'; // equivalent to "let hintcharacters = 'abc'"
-  } else {
-    settings.hintcharacters = 'xyz';
-  }
-
-  // Propagate the current settings to all tabs for the
-  // rest of the session
-  PORT('syncSettings', { settings: settings });
-
-  // Display cVim's status bar for 2 seconds.
-  Status.setMessage('Hint Set: ' + (true ? 'a' : 'b'), 2);
-}}
-
-" Run the JavaScript block
-map <Tab> :call switchHintCharacters<CR>
-```
+### Code blocks (removed)
+ * Code blocks — user-defined JavaScript functions written directly in the
+   cVimrc (`name() -> {{ ... }}`), auto-run blocks (`-> {{ ... }}`), the `:call`
+   of such functions, `createScriptHint`, and the `:script` command — are **no
+   longer supported**.
+ * They depended on `eval(...)`, which Manifest V3 forbids in content scripts.
+ * Older cVimrc files that still contain `{{ ... }}` blocks will continue to
+   load without error; the blocks are ignored.
 
 ### Completion Engines
   * These are a list of completion engines that can be used in the command bar. They can be set
@@ -343,7 +312,6 @@ let completionengines = ['google', 'google-image', 'youtube'] " Show only these 
 | `Q`                       | trigger a unhover event (mouseout + mouseleave)                       | createUnhoverHint               |
 | `mf`                      | open multiple links                                                   | createMultiHint                 |
 | unmapped                  | edit text with external editor                                        | createEditHint                  |
-| unmapped                  | call a code block with the link as the first argument                 | createScriptHint(`<FUNCTION_NAME>`) |
 | unmapped                  | opens images in a new tab                                             | fullImageHint                   |
 | `mr`                      | reverse image search multiple links                                   | multiReverseImage               |
 | `my`                      | yank multiple links (open the list of links with P)                   | multiYankUrl                    |
@@ -488,7 +456,6 @@ let completionengines = ['google', 'google-image', 'youtube'] " Show only these 
 | :mksession                                  | create a new session from the current tabs in the active window                        |
 | :delsession (autocomplete)                  | delete a saved session                                                                 |
 | :session (autocomplete)                     | open the tabs from a saved session in a new window                                     |
-| :script                                     | run JavaScript on the current page                                                     |
 | :togglepin                                  | toggle the pin state of the current tab                                                |
 | :pintab                                     | pin the current tab                                                                    |
 | :unpintab                                   | unpin the current tab                                                                  |
