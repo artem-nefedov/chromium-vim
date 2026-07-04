@@ -207,6 +207,34 @@ _Completed in commit `7b86a0e`._
 > phase with real regression risk (frame tracking, clipboard round-trip through
 > the offscreen doc, worker-sleep rehydration).
 
+### Known issues / follow-ups (unfixed, low priority)
+
+Surfaced by the post-Phase-2 review. None block loading the extension; each is
+left for a later cleanup pass.
+
+- **`fetchGist` runs on nearly every worker wake** (`options.js` — the top-level
+  `storage.local.get('settings')` callback calls `Options.fetchGist()` when
+  `autoupdategist && GISTURL`). On MV2 this ran once at browser startup; under
+  MV3 the worker re-runs top-level code on every wake, so gist-sync users would
+  re-fetch constantly. The hourly `chrome.alarms` timer already covers the
+  refresh. Cleaner fix: bootstrap the alarm in `runtime.onStartup`/`onInstalled`
+  and drop the per-wake fetch. Only affects the (default-off) `autoupdategist`
+  users.
+- **`TabHistory` serialized on every URL change** (`main.js` `persistTabState`).
+  Writes the full `ActiveTabs`/`TabHistory`/`LastUsedTabs` blob to
+  `chrome.storage.session` on every `tabs.onUpdated` carrying a URL. `TabHistory`
+  grows unbounded per tab over a session, so the write grows too. Functionally
+  fine; a write-volume note only.
+- **`Clipboard.ensureDocument` create race** (`clipboard.js`). Two clipboard ops
+  within the same async tick could both pass `clipboard_hasDocument()` before
+  either sets `CREATING`, causing a second `chrome.offscreen.createDocument` that
+  throws "Only a single offscreen document may be created". Rare and self-heals on
+  the next op; a shared in-flight guard set *before* the `hasDocument` check would
+  close it.
+- **`hideDownloadsShelf`** (`actions.js`) calls `chrome.downloads.setShelfEnabled`,
+  removed in Chromium 117+. Throws when invoked (isolated feature). _(Also noted
+  in 2f above.)_
+
 ### Original design notes
 
 #### 2a. Entry point
