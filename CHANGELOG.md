@@ -1,5 +1,4 @@
 # cVim Changelog
-# [Like cVim? Consider donating! https://www.paypal.me/1995eaton](https://www.paypal.me/1995eaton)
 
 ## 2.0.0 (2026-07-04)
  * **Manifest V3 migration** — cVim now runs on current Chromium/Brave (v138+), which removed support for Manifest V2 extensions.
@@ -48,7 +47,7 @@ site '*://*' {
  * Re-implement editWithVim
 
 ## 1.2.89 (2017-06-20)
- * If you are currently running an old version of the [cvim_server.py](https://github.com/1995eaton/chromium-vim/blob/master/cvim_server.py) script (keeping it up to date locally), please update to the latest version (in the link above)! For the time being, the `editWithVim` feature has been disabled due to a security concern.
+ * If you are currently running an old version of the [cvim_server.py](https://github.com/artem-nefedov/chromium-vim/blob/master/cvim_server.py) script (keeping it up to date locally), please update to the latest version (in the link above)! For the time being, the `editWithVim` feature has been disabled due to a security concern.
  * Bug fixes
 
 ## 1.2.88
@@ -161,7 +160,7 @@ and why it occurred.
  * Added lastUsedTab command
  * The goToSource command is now `:viewsource&<CR>`
  * Removed the mapping blacklist feature for the blacklists array (e.g. `let blacklists = ["*://*.reddit.com/* <Up> <Down>])
-  * The syntax for an extended version of this feature can now be found [here](https://github.com/1995eaton/chromium-vim#site-specific-configuration)
+  * The syntax for an extended version of this feature can now be found [here](https://github.com/artem-nefedov/chromium-vim#site-specific-configuration)
 
 ## 1.2.61
  * Minor bug fixes from last update
@@ -185,7 +184,7 @@ and why it occurred.
 
 ## 1.2.56
  * **Important!** The behavior of commands that open links (`:open`, `:tabnew`, `:history`, etc) has changed. See [the mappings page](./mappings.html#tabs) for more information.
- * Awesome new feature! It's now possible to use Vim to edit text boxes. All that is needed is a python script that can be found [here](https://github.com/1995eaton/chromium-vim/blob/master/cvim_server.py)
+ * Awesome new feature! It's now possible to use Vim to edit text boxes. All that is needed is a python script that can be found [here](https://github.com/artem-nefedov/chromium-vim/blob/master/cvim_server.py)
   * To get things running, just run the script: `python cvim_socket.py` and press `<C-i>` inside a text box.
  * As a result of the above, the insert mapping `<C-i>` (beginningOfLine) is now `<C-a>`.
  * Smoother scrolling

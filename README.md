@@ -8,7 +8,7 @@ Updated to use Manifest V3 with AI (Claude).
 
  * There are two ways:
   * You can install it through the [Chrome web store](https://chrome.google.com/webstore/detail/cvim/ihlenndgcmojhcghmfjfneahoeklbjjh)
-  * You can download the `.zip` file [here](https://github.com/1995eaton/chromium-vim/archive/master.zip) and enable cVim by going to the `chrome://extensions` URL and checking developer mode, then pointing Chrome to the unzipped folder via the `Load unpacked extensions...` button.
+  * You can download the `.zip` file [here](https://github.com/artem-nefedov/chromium-vim/archive/master.zip) and enable cVim by going to the `chrome://extensions` URL and checking developer mode, then pointing Chrome to the unzipped folder via the `Load unpacked extensions...` button.
 
 # Why is this different than Vimium, ViChrome, or Vrome?
 
@@ -425,7 +425,7 @@ let completionengines = ['google', 'google-image', 'youtube'] " Show only these 
 | `<C-j>`                   | move cursor forward one line                                          | forwardLine                     |
 | `<C-k>`                   | move cursor back one line                                             | backwardLine                    |
 | unmapped                  | select input text (equivalent to `<C-a>`)                             | selectAll                       |
-| unmapped                  | edit with Vim in a terminal (need the [cvim_server.py](https://github.com/1995eaton/chromium-vim/blob/master/cvim_server.py) script running for this to work and the VIM_COMMAND set inside that script) | editWithVim     |
+| unmapped                  | edit with Vim in a terminal (need the [cvim_server.py](https://github.com/artem-nefedov/chromium-vim/blob/master/cvim_server.py) script running for this to work and the VIM_COMMAND set inside that script) | editWithVim     |
 
 # Command Mode
 
@@ -475,7 +475,7 @@ let completionengines = ['google', 'google-image', 'youtube'] " Show only these 
 
 Nice that you want to spend some time improving this extension.
 Solving issues is always appreciated. If you're going to add a feature,
-it would be best to [submit an issue](https://github.com/1995eaton/chromium-vim/issues).
+it would be best to [submit an issue](https://github.com/artem-nefedov/chromium-vim/issues).
 You'll get feedback whether it will likely be merged.
 
 1. Run `npm install` in the repository's root folder

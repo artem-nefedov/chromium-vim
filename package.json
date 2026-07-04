@@ -1,10 +1,16 @@
 {
   "name": "chromium-vim",
   "author": "Jake Eaton <1995eaton@gmail.com>",
+  "contributors": [
+    {
+      "name": "Artem Nefedov",
+      "url": "https://github.com/artem-nefedov"
+    }
+  ],
   "description": "Vim bindings for Google Chrome.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/1995eaton/chromium-vim"
+    "url": "https://github.com/artem-nefedov/chromium-vim"
   },
   "private": true,
   "devDependencies": {
