@@ -19,6 +19,14 @@
 <script src="../content_scripts/frames.js"></script>
 <script src="../content_scripts/messenger.js"></script></head><h1>cVim Changelog</h1>
 <h1><a href="https://www.paypal.me/1995eaton">Like cVim? Consider donating! https://www.paypal.me/1995eaton</a></h1>
+<h2>2.0.0 (2026-07-04)</h2>
+<ul>
+<li><strong>Manifest V3 migration</strong> — cVim now runs on current Chromium/Brave (v138+), which removed support for Manifest V2 extensions.</li>
+<li>The persistent background page is now a service worker; tab/window/session state persists across worker restarts.</li>
+<li>Clipboard (yank/paste) now works through an offscreen document.</li>
+<li><strong>Removed:</strong> features that execute arbitrary user-authored JavaScript, which MV3 forbids — JS code blocks (<code>name() -&gt; {{ ... }}</code>), <code>:call &lt;jsFunction&gt;</code>, <code>createScriptHint</code>, auto-functions (bare <code>{{ ... }}</code>), and the <code>:script</code> command. Existing <code>.cvimrc</code> files using these keep loading; the unsupported parts are skipped with a warning.</li>
+<li>Everything else in <code>.cvimrc</code> (settings, <code>map</code>/<code>imap</code>/<code>unmap</code>, blacklists, <code>site{}</code> scopes, <code>:source</code>, gist sync) continues to work.</li>
+</ul>
 <h2>1.2.99 (2017-12-17)</h2>
 <ul>
 <li>Updated list of <code>chrome://</code> completion URLs when <code>:chrome</code> is used</li>

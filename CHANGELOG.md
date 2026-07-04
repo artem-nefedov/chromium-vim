@@ -1,6 +1,13 @@
 # cVim Changelog
 # [Like cVim? Consider donating! https://www.paypal.me/1995eaton](https://www.paypal.me/1995eaton)
 
+## 2.0.0 (2026-07-04)
+ * **Manifest V3 migration** — cVim now runs on current Chromium/Brave (v138+), which removed support for Manifest V2 extensions.
+ * The persistent background page is now a service worker; tab/window/session state persists across worker restarts.
+ * Clipboard (yank/paste) now works through an offscreen document.
+ * **Removed:** features that execute arbitrary user-authored JavaScript, which MV3 forbids — JS code blocks (`name() -> {{ ... }}`), `:call <jsFunction>`, `createScriptHint`, auto-functions (bare `{{ ... }}`), and the `:script` command. Existing `.cvimrc` files using these keep loading; the unsupported parts are skipped with a warning.
+ * Everything else in `.cvimrc` (settings, `map`/`imap`/`unmap`, blacklists, `site{}` scopes, `:source`, gist sync) continues to work.
+
 ## 1.2.99 (2017-12-17)
  * Updated list of `chrome://` completion URLs when `:chrome` is used
  * Fixed issue with `openPasteTab` [#573](https://github.com/1995eaton/chromium-vim/issues/573)
