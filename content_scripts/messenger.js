@@ -1,4 +1,4 @@
-var port = chrome.extension.connect({name: 'main'});
+var port = chrome.runtime.connect({name: 'main'});
 port.onDisconnect.addListener(function() {
   window.portDestroyed = true;
   chrome.runtime.sendMessage = function() {};
@@ -164,7 +164,7 @@ port.onMessage.addListener(function(response) {
   }
 });
 
-chrome.extension.onMessage.addListener(function(request, sender, callback) {
+chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   switch (request.action) {
   case 'hideHud':
     HUD.hide(true);

@@ -31,18 +31,14 @@ chrome.runtime.onInstalled.addListener(function(details) {
     var checkError = function() { if (chrome.runtime.lastError) return false; };
     return chrome.tabs.query({status: 'complete'}, function(tabs) {
       tabs.forEach(function(tab) {
-        contentScripts.js.forEach(function(file) {
-          chrome.tabs.executeScript(tab.id, {
-            file: file,
-            allFrames: contentScripts.all_fames
-          }, checkError);
-        });
-        contentScripts.css.forEach(function(file) {
-          chrome.tabs.insertCSS(tab.id, {
-            file: file,
-            allFrames: contentScripts.all_fames
-          }, checkError);
-        });
+        chrome.scripting.executeScript({
+          target: {tabId: tab.id, allFrames: contentScripts.all_frames},
+          files: contentScripts.js
+        }, checkError);
+        chrome.scripting.insertCSS({
+          target: {tabId: tab.id, allFrames: contentScripts.all_frames},
+          files: contentScripts.css
+        }, checkError);
       });
     });
   }

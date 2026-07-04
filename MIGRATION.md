@@ -91,9 +91,34 @@ Steps:
 
 ---
 
-## Phase 1 — Mechanical API swaps (low risk, do first)
+## Phase 1 — Mechanical API swaps ✅ DONE
 
-Independent and testable in isolation:
+_Completed in commit `cc77f0f`._
+
+**Implementation notes (as built):**
+
+- `manifest.json`: `manifest_version` → 3; `browser_action` → `action`; CSP →
+  object form `{"extension_pages": "script-src 'self'; object-src 'self'"}`
+  (dropped `unsafe-eval`); `<all_urls>` moved from `permissions` to a new
+  `host_permissions`; added `"scripting"` permission; `web_accessible_resources`
+  → object form with `resources`/`matches`.
+- `chrome.browserAction.setIcon` → `chrome.action.setIcon` (popup.js ×5,
+  actions.js ×1).
+- `chrome.extension.{connect,getURL,onMessage}` → `chrome.runtime.*`
+  (pages/popup.js, command.js, messenger.js).
+- `chrome.tabs.insertCSS(id, {code})` → `chrome.scripting.insertCSS({target,css})`
+  (actions.js `injectCSS`). `update.js` re-injection loop →
+  `chrome.scripting.executeScript({target,files})` + `insertCSS({target,files})`;
+  also fixed the pre-existing `all_fames` typo → `all_frames`.
+- Verified: manifest JSON parses, all edited JS passes `node --check`, and no
+  `chrome.extension` / `browserAction` / `tabs.executeScript` / `tabs.insertCSS` /
+  `unsafe-eval` references remain.
+
+> The `"background"` block still lists 15 scripts (MV2 form) — converting it to a
+> service worker is Phase 2. Loading this manifest as MV3 will fail until Phase 2
+> lands; Phase 1 is committed as an isolated, reviewable step.
+
+Original checklist (all applied):
 
 1. **`browserAction` → `action`** — manifest key `browser_action` → `action`;
    6 calls in `background_scripts/popup.js` (`:27,38,46,76,78`) and
@@ -212,6 +237,6 @@ Manual smoke test on current Brave / Chromium 138+ (load unpacked):
 | Phase | Risk | Rough effort |
 |---|---|---|
 | 0 — Remove eval features ✅ | Low | ~0.5 day (done) |
-| 1 — API swaps | Low | ~1 day |
+| 1 — API swaps ✅ | Low | ~1 day (done) |
 | 2 — Service worker | **High** | ~1.5–2 weeks (2f dominates) |
 | 3 — Verification | Medium | ~2–3 days |

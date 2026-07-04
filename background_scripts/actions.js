@@ -599,7 +599,10 @@ Actions = (function() {
   };
 
   _.injectCSS = function(o) {
-    chrome.tabs.insertCSS(o.sender.tab.id, {code: o.request.css}, function() {
+    chrome.scripting.insertCSS({
+      target: {tabId: o.sender.tab.id},
+      css: o.request.css
+    }, function() {
       // prevent the background script from throwing exceptions
       // when trying to insert CSS into unsupported URLs (chrome://*, etc)
       if (!chrome.runtime.lastError) {
@@ -694,7 +697,7 @@ Actions = (function() {
   };
 
   _.setIconEnabled = function(o) {
-    chrome.browserAction.setIcon({
+    chrome.action.setIcon({
       path: 'icons/38.png',
       tabId: o.sender.tab.id
     }, function() {

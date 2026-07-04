@@ -24,7 +24,7 @@ Popup.getActiveTab = function(callback) {
 
 Popup.setIconDisabled = function() {
   this.getActiveTab(function(tab) {
-    chrome.browserAction.setIcon({
+    chrome.action.setIcon({
       path: 'icons/disabled.png',
       tabId: tab.id
     }, function() {
@@ -35,7 +35,7 @@ Popup.setIconDisabled = function() {
 
 Popup.setIconEnabled = function(obj) {
   if (obj.sender) {
-    return chrome.browserAction.setIcon({
+    return chrome.action.setIcon({
       path: 'icons/38.png',
       tabId: obj.sender.tab.id
     }, function() {
@@ -43,7 +43,7 @@ Popup.setIconEnabled = function(obj) {
     });
   }
   this.getActiveTab(function(tab) {
-    chrome.browserAction.setIcon({
+    chrome.action.setIcon({
       path: 'icons/38.png',
       tabId: tab.id
     }, function() {
@@ -73,9 +73,9 @@ Popup.toggleEnabled = function(obj) {
       tabs.map(function(tab) { return tab.id; }).forEach(function(id) {
         chrome.tabs.sendMessage(id, {action: 'toggleEnabled'});
         if (this.active) {
-          chrome.browserAction.setIcon({path: 'icons/38.png', tabId: id});
+          chrome.action.setIcon({path: 'icons/38.png', tabId: id});
         } else {
-          chrome.browserAction.setIcon({path: 'icons/disabled.png', tabId: id});
+          chrome.action.setIcon({path: 'icons/disabled.png', tabId: id});
         }
       }.bind(this));
     }

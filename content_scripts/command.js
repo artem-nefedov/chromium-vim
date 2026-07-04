@@ -570,7 +570,7 @@ Command.execute = function(value, repeats) {
     tab.tabbed = true;
     RUNTIME('openLink', {
       tab: tab,
-      url: chrome.extension.getURL('/pages/options.html'),
+      url: chrome.runtime.getURL('/pages/options.html'),
       repeats: repeats
     });
     return;
@@ -578,7 +578,7 @@ Command.execute = function(value, repeats) {
     tab.tabbed = true;
     RUNTIME('openLink', {
       tab: tab,
-      url: chrome.extension.getURL('/pages/changelog.html'),
+      url: chrome.runtime.getURL('/pages/changelog.html'),
       repeats: repeats
     });
     return;
@@ -586,7 +586,7 @@ Command.execute = function(value, repeats) {
     tab.tabbed = true;
     RUNTIME('openLink', {
       tab: tab,
-      url: chrome.extension.getURL('/pages/mappings.html')
+      url: chrome.runtime.getURL('/pages/mappings.html')
     });
     return;
   case 'stop':
