@@ -147,8 +147,19 @@ var Listeners = {
       port.postMessage({type: 'hello'});
       port.postMessage({type: 'addFrame', frameId: frameId});
       activePorts.push(port);
+      // Async actions may reply via this callback long after the frame has
+      // navigated away or the port has otherwise disconnected. Posting to a
+      // dead port throws "Attempting to use a disconnected port object", so
+      // swallow that specific failure instead of crashing the async handler.
+      var safePostMessage = function(message) {
+        try {
+          port.postMessage(message);
+        } catch (e) {
+          // Port is gone; the reply is no longer relevant.
+        }
+      };
       port.onMessage.addListener(function(request) {
-        return Actions(request, port.sender, port.postMessage.bind(port), port);
+        return Actions(request, port.sender, safePostMessage, port);
       });
       port.onDisconnect.addListener(function() {
         Frames.removeFrame(frameId);
