@@ -219,14 +219,21 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
     Marks.parseQuickMarks(request.marks);
     break;
   case 'nextCompletionResult':
+    // Only the command frame decides the outcome (there is exactly one per
+    // tab), so it always responds synchronously with a boolean: true means
+    // "I did not consume <C-n>, let the background emulate Chrome's default
+    // (open a new window)"; false means "consumed, do nothing". Responding in
+    // both cases lets us close the channel immediately instead of holding it
+    // open to suppress the fallback.
     if (window.isCommandFrame) {
       if (settings.cncpcompletion &&
           Command.commandBarFocused() &&
           Command.type === 'action') {
         Search.nextResult();
-        break;
+        callback(false);
+      } else {
+        callback(true);
       }
-      callback(true);
     }
     break;
   case 'deleteBackWord':
@@ -344,9 +351,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
     }
     break;
   case 'isFrameVisible':
-    callback(e.innerWidth > 5 && e.innerHeight > 5);
+    callback(window.innerWidth > 5 && window.innerHeight > 5);
     break;
   }
 
-  return true;
+  // Every branch that responds does so synchronously, so we must NOT return
+  // true here. Returning true tells Chrome to keep the message channel open
+  // for an async sendResponse that never comes; when the channel later closes
+  // Chrome logs "A listener indicated an asynchronous response by returning
+  // true, but the message channel closed before a response was received".
 });

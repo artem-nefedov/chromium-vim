@@ -204,8 +204,14 @@ var Listeners = {
         chrome.tabs.query({active: true, currentWindow: true}, function(tab) {
           chrome.tabs.sendMessage(tab[0].id, {
             action: 'nextCompletionResult'
-          }, function() {
-            chrome.windows.create({url: 'chrome://newtab'});
+          }, function(useDefault) {
+            // The command frame replies true when it did not consume <C-n>,
+            // in which case we emulate Chrome's default new-window behavior.
+            // Guard against lastError (no receiver) so the SW doesn't log.
+            if (chrome.runtime.lastError) return;
+            if (useDefault) {
+              chrome.windows.create({url: 'chrome://newtab'});
+            }
           });
         });
         break;
