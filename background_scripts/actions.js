@@ -788,6 +788,9 @@ Actions = (function() {
     chrome.tabs.sendMessage(o.sender.tab.id, {
       action: o.request.action
     }, function() {
+      // Reading lastError consumes the "message port closed before a response
+      // was received" warning if no command frame was there to respond.
+      if (chrome.runtime.lastError) return;
       var frame = Frames.get(o.sender.tab.id);
       if (frame) {
         frame.focus(frame.focusedId, true);
