@@ -936,15 +936,27 @@ Command.show = function(search, value, complete) {
     Status.hide();
   }
   this.bar.style.display = 'inline-block';
-  setTimeout(function() {
-    this.input.focus();
+
+  // The command bar lives in an iframe that the top frame toggles from
+  // display:none to display:block when the bar is opened. On the first open the
+  // iframe has not been laid out/painted yet, so a single focus() call is
+  // silently dropped by Chrome and the command has to be pressed twice. Retry
+  // the focus across a few animation frames until it actually sticks.
+  var self = this;
+  var attempts = 0;
+  var focusInput = function() {
+    self.input.focus();
+    if (!self.commandBarFocused() && attempts++ < 20) {
+      requestAnimationFrame(focusInput);
+      return;
+    }
     if (complete !== null) {
-      this.complete(value);
+      self.complete(value);
     }
 
     // UPDATE: seems to work without patch now (Chromium 44.0.2403.130)
     // Temp fix for Chromium issue in #97
-    if (this.commandBarFocused()) {
+    if (self.commandBarFocused()) {
       document.activeElement.select();
 
       // TODO: figure out why a842dd6 and fix for #527 are necessary
@@ -953,8 +965,8 @@ Command.show = function(search, value, complete) {
 
     }
     // End temp fix
-
-  }.bind(this), 0);
+  };
+  requestAnimationFrame(focusInput);
 };
 
 Command.hide = function(callback) {
