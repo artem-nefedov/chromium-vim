@@ -970,7 +970,7 @@ Command.show = function(search, value, complete) {
 };
 
 Command.hide = function(callback) {
-  if (window.isCommandFrame)
+  if (window.isCommandFrame && this.input)
     this.input.blur();
   commandMode = false;
   this.historyMode = false;
