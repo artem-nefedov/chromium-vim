@@ -1,5 +1,23 @@
 # cVim Changelog
 
+## 2.0.6 (2026-07-15)
+ * Guard `input.blur` against an unset element in `Command.hide`
+
+## 2.0.5 (2026-07-14)
+ * Retry command bar focus until the frame is painted
+
+## 2.0.4 (2026-07-09)
+ * Guard the `hideCommandFrame` callback against `lastError`
+
+## 2.0.3 (2026-07-09)
+ * Fix "message channel closed" warning from the `onMessage` listener
+
+## 2.0.2 (2026-07-09)
+ * Try to fix "Error: Attempting to use a disconnected port object"
+
+## 2.0.1 (2026-07-09)
+ * Remove the `webNavigation` permission
+
 ## 2.0.0 (2026-07-04)
  * **Manifest V3 migration** — cVim now runs on current Chromium/Brave (v138+), which removed support for Manifest V2 extensions.
  * The persistent background page is now a service worker; tab/window/session state persists across worker restarts.
