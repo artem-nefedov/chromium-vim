@@ -1,5 +1,10 @@
 # cVim Changelog
 
+## 2.0.7 (2026-08-01)
+
+- Pierce shadow DOM when detecting the focused element, so bindings no longer fire while typing in inputs inside web components (e.g. Reddit's search box)
+- Descend into shadow DOM for link hints (`f`) and goto-input (`gi`), so inputs inside web components are found
+
 ## 2.0.6 (2026-07-15)
 
 - Guard `input.blur` against an unset element in `Command.hide`
