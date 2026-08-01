@@ -397,7 +397,7 @@ if (HAS_EVENT_KEY_SUPPORT) {
         if (Object.compare(event, KeyEvents.lastHandledEvent,
               ['which', 'ctrlKey', 'shiftKey', 'metaKey', 'altKey'])) {
           KeyEvents.lastHandledEvent = null;
-          if (!DOM.isEditable(document.activeElement)) {
+          if (!DOM.isEditable(DOM.deepActiveElement())) {
             event.stopImmediatePropagation();
           }
         }
@@ -431,7 +431,7 @@ if (HAS_EVENT_KEY_SUPPORT) {
 
         // preventDefault before it becomes too late (keys like <Down> and <F1>)
         if (!insertMode && !commandMode &&
-            !DOM.isTextElement(document.activeElement)) {
+            !DOM.isTextElement(DOM.deepActiveElement())) {
           var guess = KeyEvents.keyhandle(event, 'keydown');
           if (guess.length > 1 &&
               Mappings.shouldPrevent(KeyEvents.keyhandle(event, 'keydown'))) {
@@ -466,7 +466,7 @@ if (HAS_EVENT_KEY_SUPPORT) {
             event.preventDefault();
           }
           KeyEvents.lastHandledEvent = event;
-          if (!DOM.isEditable(document.activeElement)) {
+          if (!DOM.isEditable(DOM.deepActiveElement())) {
             event.stopImmediatePropagation();
           }
         }
@@ -702,7 +702,7 @@ var KeyHandler = {
     if (insertMode)
       return;
 
-    var isInput = DOM.isEditable(document.activeElement);
+    var isInput = DOM.isEditable(DOM.deepActiveElement());
 
     // When <Tab> or <S-Tab> is pressed in 'gi' mode
     if (!commandMode && Mappings.actions.inputFocused && event.which === 9) {

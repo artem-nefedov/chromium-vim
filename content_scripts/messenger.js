@@ -237,7 +237,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
     }
     break;
   case 'deleteBackWord':
-    if (!insertMode && DOM.isEditable(document.activeElement)) {
+    if (!insertMode && DOM.isEditable(DOM.deepActiveElement())) {
       Mappings.insertFunctions.deleteWord();
       if (Command.commandBarFocused() && Command.type === 'action')
         Command.complete(Command.input.value);

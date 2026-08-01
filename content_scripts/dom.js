@@ -15,6 +15,18 @@ window.DOM = {
     return false;
   },
 
+  // document.activeElement only reports the top-level focused node. When focus
+  // is inside a shadow tree (e.g. Reddit's search web component), it returns the
+  // shadow host rather than the real input. Descend through shadow roots to find
+  // the element that actually holds focus.
+  deepActiveElement: function() {
+    var active = document.activeElement;
+    while (active && active.shadowRoot && active.shadowRoot.activeElement) {
+      active = active.shadowRoot.activeElement;
+    }
+    return active;
+  },
+
   isEditable: function(element) {
     if (!element) {
       return false;

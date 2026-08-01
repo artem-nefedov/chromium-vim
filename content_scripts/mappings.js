@@ -987,7 +987,7 @@ Mappings.executeSequence = function(c, r) {
   } else {
     this.convertToAction(com);
   }
-  if (!commandMode && !DOM.isEditable(document.activeElement)) {
+  if (!commandMode && !DOM.isEditable(DOM.deepActiveElement())) {
     setTimeout(function() {
       Mappings.executeSequence(c.substring(1), r);
     });
@@ -1014,13 +1014,14 @@ Mappings.handleEscapeKey = function() {
     return;
   }
 
-  if (DOM.isEditable(document.activeElement)) {
+  var activeElement = DOM.deepActiveElement();
+  if (DOM.isEditable(activeElement)) {
     if (document.getSelection().type === 'Range') {
       document.getSelection().collapseToEnd();
       return;
     }
     this.actions.inputFocused = false;
-    document.activeElement.blur();
+    activeElement.blur();
     return;
   }
 

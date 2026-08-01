@@ -217,7 +217,7 @@ Hints.dispatchAction = function(link, shift) {
   if (this.multi) {
     this.removeContainer();
     window.setTimeout(function() {
-      if (!DOM.isEditable(document.activeElement))
+      if (!DOM.isEditable(DOM.deepActiveElement()))
         this.create(this.type, true);
     }.bind(this), 0);
   } else {
