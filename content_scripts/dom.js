@@ -27,6 +27,20 @@ window.DOM = {
     return active;
   },
 
+  // Like root.querySelectorAll(selector), but also descends into shadow roots
+  // so elements inside web components (e.g. Reddit's search input) are found.
+  deepQuerySelectorAll: function(root, selector) {
+    var results = [].slice.call(root.querySelectorAll(selector));
+    var all = root.querySelectorAll('*');
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].shadowRoot) {
+        results = results.concat(
+          DOM.deepQuerySelectorAll(all[i].shadowRoot, selector));
+      }
+    }
+    return results;
+  },
+
   isEditable: function(element) {
     if (!element) {
       return false;

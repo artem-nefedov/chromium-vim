@@ -594,8 +594,8 @@ Mappings.actions = {
   },
   goToInput: function(repeats) {
     this.inputElements = [];
-    var allInput = document.
-      querySelectorAll('input,textarea,*[contenteditable]');
+    var allInput = DOM.deepQuerySelectorAll(
+      document, 'input,textarea,*[contenteditable]');
     for (var i = 0, l = allInput.length; i < l; i++) {
       if (DOM.isEditable(allInput[i]) &&
           DOM.isVisible(allInput[i]) &&
@@ -621,11 +621,12 @@ Mappings.actions = {
       }
     }
     this.inputFocused = true;
-    this.inputElements[this.inputElementsIndex].focus();
-    if (document.activeElement.select) {
-      document.activeElement.select();
+    var focusedInput = this.inputElements[this.inputElementsIndex];
+    focusedInput.focus();
+    if (focusedInput.select) {
+      focusedInput.select();
     }
-    if (!document.activeElement.hasAttribute('readonly')) {
+    if (!focusedInput.hasAttribute('readonly')) {
       document.getSelection().modify('move', 'right', 'lineboundary');
     }
   },

@@ -313,6 +313,15 @@ var mapDOM = function(root, accept) {
   var nodes = [root];
   for (var i = 0; i < nodes.length; i++) {
     var node = nodes[i];
+    // Descend into shadow trees so elements inside web components (e.g.
+    // Reddit's search input) are considered for hints.
+    if (node.shadowRoot) {
+      var shadowChild = node.shadowRoot.firstChild;
+      while (shadowChild !== null) {
+        nodes.push(shadowChild);
+        shadowChild = shadowChild.nextSibling;
+      }
+    }
     node = node.firstChild;
     while (node !== null) {
       nodes.push(node);
