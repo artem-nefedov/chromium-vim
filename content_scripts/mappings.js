@@ -78,6 +78,7 @@ Mappings.defaults = [
   ['gQ',        'cancelAllWebRequests'],
   ['q',         'createHoverHint'],
   ['Q',         'createUnhoverHint'],
+  ['gv',        'pressLastHover'],
   ['g$',        'lastTab'],
   ['X',         'lastClosedTab'],
   ['gj',        'hideDownloadsShelf'],
@@ -429,6 +430,11 @@ Mappings.actions = {
   createEditHint: function() { Hints.create('edit'); },
   createHoverHint: function() { Hints.create('hover'); },
   createUnhoverHint: function() { Hints.create('unhover'); },
+  pressLastHover: function() {
+    if (Hints.lastHover) {
+      DOM.mouseEvent('click', Hints.lastHover);
+    }
+  },
   createScriptHint: function() {
     // Script hints executed user-defined JavaScript via eval(), which is
     // forbidden under Manifest V3, so this action is no longer supported.

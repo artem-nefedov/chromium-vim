@@ -18,6 +18,39 @@
 <script src="../content_scripts/search.js"></script>
 <script src="../content_scripts/frames.js"></script>
 <script src="../content_scripts/messenger.js"></script></head><h1>cVim Changelog</h1>
+<h2>2.1.0 (2026-08-02)</h2>
+<ul>
+<li>Add <code>gv</code> (<code>pressLastHover</code>) to click the last element hovered with <code>q</code></li>
+</ul>
+<h2>2.0.7 (2026-08-01)</h2>
+<ul>
+<li>Pierce shadow DOM when detecting the focused element, so bindings no longer fire while typing in inputs inside web components (e.g. Reddit’s search box)</li>
+<li>Descend into shadow DOM for link hints (<code>f</code>) and goto-input (<code>gi</code>), so inputs inside web components are found</li>
+</ul>
+<h2>2.0.6 (2026-07-15)</h2>
+<ul>
+<li>Guard <code>input.blur</code> against an unset element in <code>Command.hide</code></li>
+</ul>
+<h2>2.0.5 (2026-07-14)</h2>
+<ul>
+<li>Retry command bar focus until the frame is painted</li>
+</ul>
+<h2>2.0.4 (2026-07-09)</h2>
+<ul>
+<li>Guard the <code>hideCommandFrame</code> callback against <code>lastError</code></li>
+</ul>
+<h2>2.0.3 (2026-07-09)</h2>
+<ul>
+<li>Fix &quot;message channel closed&quot; warning from the <code>onMessage</code> listener</li>
+</ul>
+<h2>2.0.2 (2026-07-09)</h2>
+<ul>
+<li>Try to fix &quot;Error: Attempting to use a disconnected port object&quot;</li>
+</ul>
+<h2>2.0.1 (2026-07-09)</h2>
+<ul>
+<li>Remove the <code>webNavigation</code> permission</li>
+</ul>
 <h2>2.0.0 (2026-07-04)</h2>
 <ul>
 <li><strong>Manifest V3 migration</strong> — cVim now runs on current Chromium/Brave (v138+), which removed support for Manifest V2 extensions.</li>
@@ -220,7 +253,7 @@ and why it occurred.</li>
 <li>Added autoupdategist option</li>
 <li>Added lastUsedTab command</li>
 <li>The goToSource command is now <code>:viewsource&amp;&lt;CR&gt;</code></li>
-<li>Removed the mapping blacklist feature for the blacklists array (e.g. `let blacklists = [&quot;<em>://</em>.reddit.com/* &lt;Up&gt; &lt;Down&gt;])</li>
+<li>Removed the mapping blacklist feature for the blacklists array (e.g. <code>let blacklists = \[&quot;*://*.reddit.com/\* &lt;Up&gt; &lt;Down&gt;\]</code>)</li>
 <li>The syntax for an extended version of this feature can now be found <a href="https://github.com/artem-nefedov/chromium-vim#site-specific-configuration">here</a></li>
 </ul>
 <h2>1.2.61</h2>

@@ -310,6 +310,7 @@ let completionengines = ['google', 'google-image', 'youtube'] " Show only these 
 | `A`                       | repeat last hint command                                              | openLastHint                    |
 | `q`                       | trigger a hover event (mouseover + mouseenter)                        | createHoverHint                 |
 | `Q`                       | trigger a unhover event (mouseout + mouseleave)                       | createUnhoverHint               |
+| `gv`                      | click the last hovered element (from `q`)                             | pressLastHover                  |
 | `mf`                      | open multiple links                                                   | createMultiHint                 |
 | unmapped                  | edit text with external editor                                        | createEditHint                  |
 | unmapped                  | opens images in a new tab                                             | fullImageHint                   |
