@@ -1164,7 +1164,7 @@ Command.updateSettings = function(config) {
     Complete.setLocale(config.locale);
   }
 
-  var chars = Utils.uniqueElements((config.hintcharacters || '').split(''));
+  var chars = [...new Set((config.hintcharacters || '').split(''))];
   settings.hintcharacters = chars.join('');
 
   if (config !== settings) {

@@ -154,9 +154,9 @@ Complete.engines = {
             text: e
           };
         });
-        callback(data.sort(function(a) {
-          return a.type !== 'NAVIGATION';
-        }).map(function(e) { return e.text; }));
+        var navigation = data.filter(function(e) { return e.type === 'NAVIGATION'; });
+        var other = data.filter(function(e) { return e.type !== 'NAVIGATION'; });
+        callback(navigation.concat(other).map(function(e) { return e.text; }));
       });
     }
   },
@@ -187,7 +187,7 @@ Complete.engines = {
         url: Utils.format(this.apiUrl, query),
         json: false
       }, function(response) {
-        var data = JSON.parse(JSON.parse(JSON.stringify(response.replace(/\/\*[^\*]+\*\//g, '')))).d;
+        var data = JSON.parse(response.replace(/\/\*[^\*]+\*\//g, '')).d;
         data = data.replace(/^[^,]+,/, '')
                    .replace(/\n\][^\]]+\][^\]]+$/, '')
                    .replace(/,+/g, ',')
@@ -211,7 +211,7 @@ Complete.engines = {
         url: Utils.format(this.apiUrl, query),
         json: false
       }, function(response) {
-        var data = JSON.parse(JSON.parse(JSON.stringify(response.replace(/\/\*[^\*]+\*\//g, '')))).d;
+        var data = JSON.parse(response.replace(/\/\*[^\*]+\*\//g, '')).d;
         data = data.replace(/^[^,]+,/, '')
                    .replace(/\n\][^\]]+\][^\]]+$/, '')
                    .replace(/,+/g, ',')

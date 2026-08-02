@@ -142,7 +142,7 @@ Options.updateBlacklistsMappings = function() {
       index = i;
     }
   }
-  settings.blacklists = Utils.uniqueElements(settings.blacklists);
+  settings.blacklists = [...new Set(settings.blacklists)];
   if (settings.blacklists.length) {
     line = 'let blacklists = ' + JSON.stringify(settings.blacklists);
     if (index) {

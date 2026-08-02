@@ -455,28 +455,30 @@ Hints.siteFilters = {
 };
 
 Hints.createHintFilter = function(url) {
-  var rejectList = [],
-      acceptList = [];
+  var rejectList = new Set(),
+      acceptList = new Set();
   Object.getOwnPropertyNames(Hints.siteFilters).forEach(function(e) {
     if (!matchLocation(url, e))
       return;
     var reject = Hints.siteFilters[e].reject || [],
         accept = Hints.siteFilters[e].accept || [];
     accept.forEach(function(selector) {
-      var items = [].slice.call(document.querySelectorAll(selector));
-      acceptList = acceptList.concat(items);
+      document.querySelectorAll(selector).forEach(function(node) {
+        acceptList.add(node);
+      });
     });
     reject.forEach(function(selector) {
-      var items = [].slice.call(document.querySelectorAll(selector));
-      rejectList = rejectList.concat(items);
+      document.querySelectorAll(selector).forEach(function(node) {
+        rejectList.add(node);
+      });
     });
   });
   return {
     shouldAccept: function(node) {
-      return acceptList.indexOf(node) !== -1;
+      return acceptList.has(node);
     },
     shouldReject: function(node) {
-      return rejectList.indexOf(node) !== -1;
+      return rejectList.has(node);
     },
   };
 };

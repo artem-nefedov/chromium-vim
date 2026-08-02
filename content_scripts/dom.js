@@ -209,10 +209,12 @@ window.DOM = {
     case 'click': events = ['mouseover', 'mousedown', 'mouseup', 'click']; break;
     }
     events.forEach(function(eventName) {
-      var event = document.createEvent('MouseEvents');
-      event.initMouseEvent(eventName, true, true, window, 1, 0, 0, 0, 0, false,
-          false, false, false, 0, null);
-      element.dispatchEvent(event);
+      element.dispatchEvent(new MouseEvent(eventName, {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        detail: 1
+      }));
     });
   }
 

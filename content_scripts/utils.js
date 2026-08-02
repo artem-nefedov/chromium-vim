@@ -18,14 +18,6 @@ var Utils = {
   trueModulo: function(a, b) {
     return ((a % b) + b) % b;
   },
-  uniqueElements: function(array) {
-    var result = [];
-    for (var i = 0; i < array.length; i++) {
-      if (result.indexOf(array[i]) === -1)
-        result.push(array[i]);
-    }
-    return result;
-  },
   compressArray: function(array) {
     var result = [];
     // faster than using [].filter

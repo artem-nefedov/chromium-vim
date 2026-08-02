@@ -18,6 +18,15 @@
 <script src="../content_scripts/search.js"></script>
 <script src="../content_scripts/frames.js"></script>
 <script src="../content_scripts/messenger.js"></script></head><h1>cVim Changelog</h1>
+<h2>2.1.1 (2026-08-02)</h2>
+<ul>
+<li>Speed up link-hint filtering by using a <code>Set</code> for accept/reject site-filter membership</li>
+<li>Remove the dead legacy <code>KeyboardEvent</code> code path (unused since Chrome 52+)</li>
+<li>Modernize simulated mouse events to use the <code>MouseEvent</code> constructor</li>
+<li>Mark the scroll focus tracker’s <code>mousedown</code> listener as passive</li>
+<li>Fix Google suggestion ordering so navigation results are listed first</li>
+<li>Drop a redundant JSON round-trip in the Google Maps and Image completion engines</li>
+</ul>
 <h2>2.1.0 (2026-08-02)</h2>
 <ul>
 <li>Add <code>gv</code> (<code>pressLastHover</code>) to click the last element hovered with <code>q</code></li>

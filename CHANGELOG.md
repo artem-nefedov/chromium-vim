@@ -1,5 +1,18 @@
 # cVim Changelog
 
+## 2.1.1 (2026-08-02)
+
+- Speed up link-hint filtering by using a `Set` for accept/reject site-filter membership
+- Remove the dead legacy `KeyboardEvent` code path (unused since Chrome 52+)
+- Modernize simulated mouse events to use the `MouseEvent` constructor
+- Mark the scroll focus tracker's `mousedown` listener as passive
+- Fix Google suggestion ordering so navigation results are listed first
+- Drop a redundant JSON round-trip in the Google Maps and Image completion engines
+
+## 2.1.0 (2026-08-02)
+
+- Add `gv` (`pressLastHover`) to click the last element hovered with `q`
+
 ## 2.0.7 (2026-08-01)
 
 - Pierce shadow DOM when detecting the focused element, so bindings no longer fire while typing in inputs inside web components (e.g. Reddit's search box)
