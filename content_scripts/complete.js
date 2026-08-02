@@ -181,47 +181,27 @@ Complete.engines = {
   'google-maps': {
     baseUrl: 'https://www.google.com/maps/preview',
     requestUrl: 'https://www.google.com/maps/search/',
-    apiUrl: 'https://www.google.com/s?tbm=map&fp=1&gs_ri=maps&source=hp&suggest=p&authuser=0&hl=en&pf=p&tch=1&ech=2&q=%s',
+    apiUrl: 'https://www.google.com/complete/search?client=chrome&hl=en&q=%s',
     queryApi: function(query, callback) {
       httpRequest({
         url: Utils.format(this.apiUrl, query),
-        json: false
+        json: true
       }, function(response) {
-        var data = JSON.parse(response.replace(/\/\*[^\*]+\*\//g, '')).d;
-        data = data.replace(/^[^,]+,/, '')
-                   .replace(/\n\][^\]]+\][^\]]+$/, '')
-                   .replace(/,+/g, ',')
-                   .replace(/\n/g, '')
-                   .replace(/\[,/g, '[');
-        data = JSON.parse(data);
-        data = data.map(function(e) {
-          return e[0][0][0];
-        });
-        callback(data);
+        callback(response[1]);
       });
     }
   },
 
   'google-image': {
-    baseUrl: 'http://www.google.com/imghp',
+    baseUrl: 'https://www.google.com/imghp',
     requestUrl: 'https://www.google.com/search?site=imghp&tbm=isch&source=hp&q=',
-    apiUrl: 'http://www.google.com/complete/search?client=img&hl=en&gs_rn=43&gs_ri=img&ds=i&cp=1&gs_id=8&q=%s',
+    apiUrl: 'https://www.google.com/complete/search?client=chrome&hl=en&ds=i&q=%s',
     queryApi: function(query, callback) {
       httpRequest({
         url: Utils.format(this.apiUrl, query),
-        json: false
+        json: true
       }, function(response) {
-        var data = JSON.parse(response.replace(/\/\*[^\*]+\*\//g, '')).d;
-        data = data.replace(/^[^,]+,/, '')
-                   .replace(/\n\][^\]]+\][^\]]+$/, '')
-                   .replace(/,+/g, ',')
-                   .replace(/\n/g, '')
-                   .replace(/\[,/g, '[');
-        data = JSON.parse(data);
-        data = data.map(function(e) {
-          return e[0][0][0];
-        });
-        callback(data);
+        callback(response[1]);
       });
     }
   },

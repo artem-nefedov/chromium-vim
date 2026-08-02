@@ -1,5 +1,9 @@
 # cVim Changelog
 
+## 2.1.2 (2026-08-02)
+
+- Fix the Google Maps and Google Image completion engines (not ideal solution: use generic Google endpoints with slightly different parameters)
+
 ## 2.1.1 (2026-08-02)
 
 - Speed up link-hint filtering by using a `Set` for accept/reject site-filter membership
